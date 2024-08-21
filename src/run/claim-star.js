@@ -84,6 +84,9 @@ console.log(
     "https://t.me/zuydd"
   )}  ___  Facebook: ${colors.blue("https://www.facebook.com/zuy.dd")}`
 );
+console.log(
+  `Cập nhật các tool mới nhất tại: ${colors.gray("https://github.com/zuydd")}`
+);
 console.log("");
 console.log("");
 console.log("");
