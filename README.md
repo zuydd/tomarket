@@ -45,6 +45,23 @@
 - nhận diện proxy tự động, ae ai chạy proxy thì thêm vào file proxy.txt ở dòng ứng với dòng chứa acc muốn chạy proxy đó, acc nào không muốn chạy proxy thì để trống hoặc gõ skip vào
 - đa luồng chạy bao nhiêu acc cũng được, không bị block lẫn nhau
 
+
+## 🔄 Lịch sử cập nhật
+> Phiên bản mới nhất: `v0.0.6`
+
+<details>
+<summary>v0.0.6 - 📅 20/08/2024</summary>
+  
+- Thêm tự động làm daily combo
+- Fix bug
+- Bổ sung readme
+</details>
+<details>
+<summary>v0.0.5 - 📅 18/08/2024</summary>
+  
+- Fix bug
+</details>
+
 ## 🎁 Donate
 🌟 Kêu gọi ủng hộ 🌟
 
