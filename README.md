@@ -10,6 +10,7 @@
 
 
 ## 🛠️ Hướng dẫn cài đặt
+> Yêu cầu đã cài đặt NodeJS
 
 - Bước 1: Tải về phiên bản mới nhất của tool [tại đây ⬇️](https://github.com/zuydd/tomarket/archive/refs/heads/main.zip)
 - Bước 2: Giải nén tool
