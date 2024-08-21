@@ -26,6 +26,8 @@
 - [proxy.txt](src/data/proxy.txt) : chứa danh sách proxy, proxy ở mỗi dòng sẽ ứng với tài khoản ở dòng đó trong file users.txt phía trên, để trống nếu không dùng proxy
 - [token.json](src/data/token.json) : chứa danh sách token được tạo ra từ `user` hoặc `query_id`. Có thể copy token từ các tool khác qua file này (miễn cùng format) để chạy.
 
+> Định dạng proxy: http://user:pass@ip:port
+
 > Lưu ý: `user` và `query_id` chỉ có thời gian sống (có thể get token) trong tầm 1-2 ngày, `token` có thời gian sống 30 ngày. Vậy nên nếu nhận được thông báo đăng nhập thất bại, hãy lấy mới lại `user` hoặc `query_id`
 
 
