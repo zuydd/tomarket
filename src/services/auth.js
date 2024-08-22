@@ -1,4 +1,5 @@
 import colors from "colors";
+import he from "he";
 import { parse } from "querystring";
 import fileHelper from "../helpers/file.js";
 import logHelper from "../helpers/log.js";
@@ -46,11 +47,11 @@ class AuthService {
       return [];
     } else {
       const usersDecode = users.map((line, index) => {
-        const valueParse = parse(decodeURIComponent(line));
+        const valueParse = parse(he.decode(decodeURIComponent(line)));
         return {
           ...valueParse,
           user: JSON.parse(valueParse.user),
-          raw: decodeURIComponent(line),
+          raw: he.decode(decodeURIComponent(line)),
           index: index + 1,
           proxy: proxies[index] || null,
           // ip: this.extractIP(proxies[index] || ""),
