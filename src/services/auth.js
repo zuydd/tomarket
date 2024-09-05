@@ -99,9 +99,11 @@ class AuthService {
   }
 
   async getBalance(dataUser, token, ip) {
+    
     try {
-      const response = await httpService.get(
+      const response = await httpService.post(
         "user/balance",
+        {},
         token,
         ip ? dataUser.proxy : null
       );

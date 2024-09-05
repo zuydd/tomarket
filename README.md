@@ -50,8 +50,13 @@
 
 
 ## 🔄 Lịch sử cập nhật
-> Phiên bản mới nhất: `v0.0.6`
+> Phiên bản mới nhất: `v0.0.7`
 
+<details>
+<summary>v0.0.7 - 📅 05/09/2024</summary>
+  
+- Fix get balance
+</details>
 <details>
 <summary>v0.0.6 - 📅 20/08/2024</summary>
   

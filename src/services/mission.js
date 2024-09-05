@@ -32,7 +32,7 @@ class MissionService {
   }
 
   async getAllMission(token, dataUser, ip) {
-    const missionsSkip = [53, 101];
+    const missionsSkip = [53, 101, 206];
     const typeMissionsSkip = ["classmateInvite"];
     const body = { language_code: "vi" };
     try {
