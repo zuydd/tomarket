@@ -1,30 +1,36 @@
 import colors from "colors";
 
-class LogHelper {
-  constructor() {}
+export class LogHelper {
+  constructor(index, userId) {
+    this.index = index;
+    this.userId = userId;
+    this.ip = "🖥️";
+  }
 
-  log(msg, userData, ip = null) {
+  log(msg) {
     console.log(
-      `[ No ${userData.index} _ ID: ${userData.user.id} _ IP: ${
-        ip || "🖥️"
-      } ] ${msg}`
+      `[ No ${this.index} _ ID: ${this.userId} _ IP: ${this.ip} ] ${msg}`
     );
   }
 
-  logError(msg, userData, ip = null) {
+  logError(msg) {
     console.log(
-      `[ No ${userData.index} _ ID: ${userData.user.id} _ IP: ${
-        ip || "🖥️"
-      } ] ${colors.red(msg)}`
+      `[ No ${this.index} _ ID: ${this.userId} _ IP: ${this.ip} ] ${colors.red(
+        msg
+      )}`
     );
   }
 
-  logSuccess(msg, userData, ip = null) {
+  logSuccess(msg) {
     console.log(
-      `[ No ${userData.index} _ ID: ${userData.user.id} _ IP: ${
-        ip || "🖥️"
+      `[ No ${this.index} _ ID: ${this.userId} _ IP: ${
+        this.ip
       } ] ${colors.green(msg)}`
     );
+  }
+
+  updateIp(ip) {
+    this.ip = ip;
   }
 }
 

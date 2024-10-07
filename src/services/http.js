@@ -1,9 +1,12 @@
 import axios from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
 
-class HttpService {
-  constructor() {
+export class HttpService {
+  constructor(log, proxy = null) {
     this.baseURL = "https://api-web.tomarket.ai/tomarket-game/v1/";
+    this.proxy = proxy;
+    this.log = log;
+    this.token = null;
     this.headers = {
       host: "api-web.tomarket.ai",
       connection: "keep-alive",
@@ -21,51 +24,65 @@ class HttpService {
     };
   }
 
-  initConfig(token, proxy) {
+  updateToken(token) {
+    this.token = token;
+  }
+
+  initConfig() {
     const headers = {
       ...this.headers,
     };
-    if (token) {
-      headers["authorization"] = token;
+
+    if (this.token) {
+      headers["authorization"] = `${this.token}`;
     }
     const config = {
       headers,
     };
-    if (proxy) {
-      config["httpsAgent"] = new HttpsProxyAgent(proxy);
+    if (this.proxy && this.proxy !== "skip") {
+      config["httpsAgent"] = new HttpsProxyAgent(this.proxy);
     }
     return config;
   }
 
-  get(endPoint, token = null, proxy = null) {
+  async get(endPoint) {
     const url = this.baseURL + endPoint;
-    const config = this.initConfig(token, proxy);
+    const config = this.initConfig();
     return axios.get(url, config);
   }
 
-  post(endPoint, body, token = null, proxy = null) {
+  async post(endPoint, body) {
     const url = this.baseURL + endPoint;
-    const config = this.initConfig(token, proxy);
+    const config = this.initConfig();
     return axios.post(url, body, config);
   }
 
-  async checkProxyIP(proxy) {
-    if (!proxy || proxy === "skip") return null;
+  put(endPoint, body) {
+    const url = this.baseURL + endPoint;
+    const config = this.initConfig();
+    return axios.put(url, body, config);
+  }
+
+  async checkProxyIP() {
+    if (!this.proxy || this.proxy === "skip") {
+      this.log.updateIp("🖥️");
+      return null;
+    }
     try {
-      const proxyAgent = new HttpsProxyAgent(proxy);
+      const proxyAgent = new HttpsProxyAgent(this.proxy);
       const response = await axios.get("https://api.ipify.org?format=json", {
         httpsAgent: proxyAgent,
       });
       if (response.status === 200) {
-        return response.data.ip;
+        const ip = response.data.ip;
+        this.log.updateIp(ip);
+        return ip;
       } else {
-        return -1;
+        throw new Error("Proxy lỗi, kiểm tra lại kết nối proxy");
       }
     } catch (error) {
+      this.log.updateIp("🖥️");
       return -1;
     }
   }
 }
-
-const httpService = new HttpService();
-export default httpService;

@@ -6,13 +6,17 @@ class FileHelper {
   constructor() {}
 
   readFile(fileName) {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
+    try {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
 
-    const filePath = path.join(__dirname, "..", "data", fileName);
+      const filePath = path.join(__dirname, "..", "data", fileName);
 
-    const datas = fs.readFileSync(filePath, "utf8");
-    return datas;
+      const datas = fs.readFileSync(filePath, "utf8");
+      return datas;
+    } catch (error) {
+      return null;
+    }
   }
 
   writeFile(fileName, data) {

@@ -1,209 +1,153 @@
 import colors from "colors";
 import dayjs from "dayjs";
+import datetimeHelper from "../helpers/datetime.js";
 import delayHelper from "../helpers/delay.js";
 import generatorHelper from "../helpers/generator.js";
-import logHelper from "../helpers/log.js";
-import httpService from "./http.js";
 
 class TaskService {
-  constructor() {
-    this.gameId = {
-      daily: "fa873d13-d831-4d6f-8aee-9cff7a1d0db1",
-      drop: "59bcd12e-04e2-404c-a172-311a0084587d",
-      farm: "53b22103-c7ff-413d-bc63-20f6fb806a07",
-    };
+  constructor() {}
+
+  filterTaskCombo(task) {
+    if (task.type !== "mysterious") return true;
+    const start = dayjs(task.startTime);
+    const end = dayjs(task.endTime);
+    const now = dayjs();
+    return now.isAfter(start) && now.isBefore(end);
   }
 
-  async runTask(info, token, dataUser, ip) {
-    const timestamp = info.timestamp;
-    let playPasses = info.play_passes;
-    const currentDatetime = dayjs.unix(timestamp);
+  async getTasks(user) {
+    const skipTasks = user?.database?.skipErrorTasks || [];
+    const skipTypes = ["classmateInvite"];
+    const body = { language_code: "vi" };
+    try {
+      const { data } = await user.http.post("tasks/list", body);
+      const dataResponse = data.data;
+      const allKeysTask = Object.keys(dataResponse);
+      let arrTasks = [];
+      allKeysTask.forEach((key) => {
+        if (key === "3rd") {
+          if (dataResponse[key].default)
+            arrTasks = arrTasks.concat(dataResponse[key].default);
+        } else {
+          arrTasks = arrTasks.concat(dataResponse[key]);
+        }
+      });
+      const tasks = arrTasks.filter((task) => {
+        return (
+          task.status !== 3 &&
+          this.filterTaskCombo(task) &&
+          !skipTasks.includes(task.taskId) &&
+          !skipTypes.includes(task.type)
+        );
+      });
 
-    const lastCheckin = dayjs.unix(info.daily?.last_check_ts).add(8, "hour");
-
-    const canClaim =
-      lastCheckin.isBefore(currentDatetime, "day") &&
-      currentDatetime.hour() >= 7;
-
-    // Chạy điểm danh hàng ngày
-    if (!info?.daily || canClaim) {
-      await this.dailyClaim(token, dataUser, ip);
+      return tasks;
+    } catch (error) {
+      user.log.logError(
+        `Không thể lấy danh sách nhiệm vụ - Lỗi: ${error.message}`
+      );
+      return [];
     }
+  }
 
-    // Kiểm tra xem có băt đầu farm chưa?
-    if (!info.farming) {
-      await this.startFarming(token, dataUser, ip);
-    } else if (timestamp > info.farming.end_at) {
-      // Thu hoạch cà chua
-      await this.endFarming(token, dataUser, ip);
-    } else {
-      const end = dayjs.unix(info.farming.end_at);
-      const difference = end.diff(currentDatetime, "minute");
-      logHelper.log(
-        `Thu hoạch sau: ${colors.green(difference + " phút")}`,
-        dataUser,
-        ip
+  async startTask(user, task) {
+    const body = { task_id: task.taskId };
+    try {
+      const { data } = await user.http.post("tasks/start", body);
+      user.log.log(
+        `Bắt đầu làm nhiệm vụ ${task.taskId}: ${colors.blue(
+          task.title
+        )} | Hoàn thành sau: ${colors.blue(
+          datetimeHelper.formatDuration(task.waitSecond + 10)
+        )}`
+      );
+      return 1;
+    } catch (error) {
+      user.log.logError(`Không thể bắt đầu nhiệm vụ - Lỗi: ${error.message}`);
+      return 0;
+    }
+  }
+
+  async checkTask(user, task) {
+    const body = { task_id: task.taskId };
+    try {
+      const { data } = await user.http.post("tasks/check", body);
+
+      return data.data?.status;
+    } catch (error) {
+      user.log.logError(`Kiểm tra nhiệm vụ thất bại - Lỗi: ${error.message}`);
+      return 0;
+    }
+  }
+
+  async claimTask(user, task) {
+    const body = { task_id: task.taskId };
+    try {
+      const { data } = await user.http.post("tasks/claim", body);
+      if (data.status === 0) {
+        user.log.log(
+          `Hoàn thành nhiệm vụ ${task.taskId}, phần thưởng: ${colors.yellow(
+            task.score + user.currency
+          )}`
+        );
+      } else {
+        user.log.logError(
+          `Không thể hoàn thành nhiệm vụ - Lỗi: ${data.message}`
+        );
+      }
+    } catch (error) {
+      user.log.logError(
+        `Không thể hoàn thành nhiệm vụ - Lỗi: ${error.message}`
       );
     }
+  }
 
-    // Chơi game
-    logHelper.log(
-      `Lượt chơi game còn lại: ${colors.green(playPasses)}`,
-      dataUser,
-      ip
-    );
-    if (playPasses > 0) {
-      for (let index = 0; index < 9999 && playPasses > 0; index++) {
-        playPasses--;
-        const statusPlay = await this.playGame(token, dataUser, ip);
-        if (!statusPlay) return;
-        const msgDelay = colors.yellow(
-          `Cần chờ 30s trước khi hoàn thành chơi game.......`
-        );
-        await delayHelper.delay(30, msgDelay, dataUser, ip);
-        await this.claimGame(token, dataUser, ip);
+  async doTask(user, task) {
+    let status = task.status;
+    const startStatus = status;
+    if (status === 0) {
+      status = await this.startTask(user, task);
+    }
+    if (status === 1) {
+      let msg = null;
+      if (startStatus === 1) {
+        msg = `Chờ hoàn thành nhiệm vụ ${task.taskId}: ${colors.blue(
+          task.title
+        )} | Hoàn thành sau: ${colors.blue(
+          datetimeHelper.formatDuration(task.waitSecond + 10)
+        )}`;
+        user.log.log(msg);
+      }
+      await delayHelper.delay(task.waitSecond + 10);
+      status = 2;
+    }
+    if (status === 2) {
+      const statusCheck = await this.checkTask(user, task);
+
+      if (statusCheck === 2 || task.type === "mysterious") {
+        await this.claimTask(user, task);
       }
     }
-    const reStartAfter = generatorHelper.randomInt(10, 13);
-    return reStartAfter;
   }
 
-  async dailyClaim(token, dataUser, ip) {
-    try {
-      const body = {
-        game_id: this.gameId.daily,
-      };
-      const response = await httpService.post(
-        "daily/claim",
-        body,
-        token,
-        ip ? dataUser.proxy : null
-      );
-      const data = response.data.data;
-      const point = data.today_points;
-      logHelper.log(
-        `Điểm danh thành công, phần thưởng: ${colors.green(point)} cà chua 🍅`,
-        dataUser,
-        ip
-      );
-    } catch (error) {
-      logHelper.logError(
-        `Không thể điểm danh hàng ngày - Lỗi: ${error.message}`,
-        dataUser,
-        ip
-      );
-    }
-  }
+  async handleTask(user) {
+    const tasks = await this.getTasks(user);
 
-  async startFarming(token, dataUser, ip) {
-    try {
-      const body = {
-        game_id: this.gameId.farm,
-      };
-      const response = await httpService.post(
-        "farm/start",
-        body,
-        token,
-        ip ? dataUser.proxy : null
-      );
-      const data = response.data.data;
-      const start = dayjs.unix(data.start_at);
-      const end = dayjs.unix(data.end_at);
-      const difference = end.diff(start, "minute");
-      logHelper.log(
-        `Bắt đầu farming....... Thu hoạch sau: ${colors.green(
-          difference + " phút"
-        )}`,
-        dataUser,
-        ip
-      );
-    } catch (error) {
-      logHelper.logError(
-        `Không thể bắt đầu farming - Lỗi: ${error.message}`,
-        dataUser,
-        ip
-      );
+    if (!tasks.length) {
+      user.log.log(colors.magenta("Đã làm hết nhiệm vụ"));
+      return;
     }
-  }
 
-  async endFarming(token, dataUser, ip) {
-    try {
-      const body = {
-        game_id: this.gameId.farm,
-      };
-      const response = await httpService.post(
-        "farm/claim",
-        body,
-        token,
-        ip ? dataUser.proxy : null
-      );
-      const data = response.data.data;
-      const point = data.claim_this_time;
-      logHelper.log(
-        `Thu hoạch thành công, phần thưởng: ${colors.green(point)} cà chua 🍅`,
-        dataUser,
-        ip
-      );
-      await this.startFarming(token, dataUser, ip);
-    } catch (error) {
-      logHelper.logError(
-        `Không thể thu hoạch - Lỗi: ${error.message}`,
-        dataUser,
-        ip
-      );
+    if (tasks.length) {
+      user.log.log(`Còn ${colors.blue(tasks.length)} nhiệm vụ chưa hoàn thành`);
     }
-  }
 
-  async playGame(token, dataUser, ip) {
-    try {
-      const body = {
-        game_id: this.gameId.drop,
-      };
-      const response = await httpService.post(
-        "game/play",
-        body,
-        token,
-        ip ? dataUser.proxy : null
-      );
-      const data = response.data.data;
-      logHelper.logSuccess("Bắt đầu chơi game.....", dataUser, ip);
-      return true;
-    } catch (error) {
-      logHelper.logError(
-        `Không thể chơi game - Lỗi: ${error.message}`,
-        dataUser,
-        ip
-      );
-      return false;
+    for (const task of tasks) {
+      await this.doTask(user, task);
+      await delayHelper.delay(generatorHelper.randomInt(10, 30));
     }
-  }
 
-  async claimGame(token, dataUser, ip) {
-    try {
-      const points = generatorHelper.randomInt(370, 450);
-      const body = {
-        game_id: this.gameId.drop,
-        points,
-      };
-      const response = await httpService.post(
-        "game/claim",
-        body,
-        token,
-        ip ? dataUser.proxy : null
-      );
-      const data = response.data.data;
-      logHelper.log(
-        `Chơi game hoàn tất, phần thưởng: ${colors.green(points)} cà chua 🍅`,
-        dataUser,
-        ip
-      );
-    } catch (error) {
-      logHelper.logError(
-        `Chơi game thất bại - Lỗi: ${error.message}`,
-        dataUser,
-        ip
-      );
-    }
+    user.log.log(colors.magenta("Đã làm xong các nhiệm vụ"));
   }
 }
 

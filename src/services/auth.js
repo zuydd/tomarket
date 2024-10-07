@@ -1,152 +1,127 @@
 import colors from "colors";
-import he from "he";
-import { parse } from "querystring";
 import fileHelper from "../helpers/file.js";
-import logHelper from "../helpers/log.js";
-import httpService from "./http.js";
+import formatHelper from "../helpers/format.js";
+import tokenHelper from "../helpers/token.js";
+import rankService from "./rank.js";
+import walletService from "./wallet.js";
 
 class AuthService {
   constructor() {}
 
-  extractIP(url) {
-    // Tách phần trước và sau dấu @
-    const parts = url.split("@");
-
-    // Nếu không có phần @ thì không hợp lệ
-    if (parts.length !== 2) return null;
-
-    // Lấy phần sau dấu @
-    const afterAt = parts[1];
-
-    // Tách phần sau dấu @ theo dấu :
-    const afterAtParts = afterAt.split(":");
-
-    // IP là phần tử đầu tiên sau dấu @
-    const ip = afterAtParts[0];
-
-    return ip;
-  }
-
-  getUser(fileName = "users.txt") {
-    const rawDatas = fileHelper.readFile(fileName);
-    const rawProxies = fileHelper.readFile("proxy.txt");
-    const users = rawDatas
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(
-        (line) => line.length > 0 && decodeURIComponent(line).includes("user=")
-      );
-
-    const proxies = rawProxies
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    if (users.length <= 0) {
-      console.log(colors.red(`Không tìm thấy dữ liệu`));
-      return [];
-    } else {
-      const usersDecode = users.map((line, index) => {
-        const valueParse = parse(he.decode(decodeURIComponent(line)));
-        return {
-          ...valueParse,
-          user: JSON.parse(valueParse.user),
-          raw: he.decode(decodeURIComponent(line)),
-          index: index + 1,
-          proxy: proxies[index] || null,
-          // ip: this.extractIP(proxies[index] || ""),
-        };
-      });
-      return usersDecode;
-    }
-  }
-
-  async login(dataUser, ip) {
-    const user = dataUser.user;
-    const id = user.id;
-    const name = (user.first_name + " " + user.last_name).trim();
-    console.log(
-      `========== Đăng nhập tài khoản ${dataUser.index} | ${name.green} ==========`
-    );
-
-    let token = fileHelper.getTokenById(id);
-
-    if (!token || this.isExpired(token)) {
-      const initData = dataUser.raw.replace(/\r/g, "");
-      const body = {
-        init_data: initData,
-        invite_code: "0000cwVd",
-      };
-      const bodyString = JSON.stringify(body);
-
-      try {
-        const response = await httpService.post(
-          "user/login",
-          bodyString,
-          null,
-          ip ? dataUser.proxy : null
-        );
-        if (response.data.data.access_token) {
-          token = response.data.data.access_token;
-          fileHelper.saveToken(id, token);
-          logHelper.logSuccess("Đăng nhập thành công", dataUser, ip);
-        }
-      } catch (error) {
-        logHelper.logError(error.message, dataUser, ip);
-      }
-    }
-    return token;
-  }
-
-  async getBalance(dataUser, token, ip) {
-    
+  async login(user, skipLog = false) {
+    user.http.updateToken(null);
+    const body = {
+      from: "",
+      init_data: user.query_id,
+      invite_code: user?.database?.ref || "0000cwVd",
+      is_bot: false,
+    };
     try {
-      const response = await httpService.post(
-        "user/balance",
-        {},
-        token,
-        ip ? dataUser.proxy : null
-      );
-      if (response.data.status === 400) {
-        return 2;
+      const { data } = await user.http.post("user/login", body);
+
+      if (data?.data.access_token) {
+        return {
+          access: data.data.access_token,
+        };
       }
-      const info = response.data.data;
-      logHelper.log(
-        `Số cà chua hiện có: ${colors.green(info?.available_balance)} 🍅`,
-        dataUser,
-        ip
-      );
-      return info;
+      return null;
     } catch (error) {
-      logHelper.logError(error.message, dataUser, ip);
+      if (!skipLog) {
+        user.log.logError(`Đăng nhập thất bại: ${error}`);
+      }
       return null;
     }
   }
 
-  isExpired(token) {
-    // Tách payload từ JWT token
-    const base64Url = token.split(".")[1]; // Phần payload nằm ở phần giữa
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); // Thay đổi ký tự để đúng chuẩn base64
-
-    // Giải mã base64 thành chuỗi JSON
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map(function (c) {
-          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-        })
-        .join("")
+  async handleLogin(user, isAddWallet = false) {
+    console.log(
+      `============== Chạy tài khoản ${user.index} | ${user.info.fullName.green} ==============`
     );
 
-    // Chuyển chuỗi JSON thành đối tượng JavaScript
-    const payload = JSON.parse(jsonPayload);
+    let token = fileHelper.getTokenById(user.info.id);
 
-    // Lấy thông tin exp từ payload
-    const exp = payload.exp;
-    // Lấy thời gian hiện tại tính bằng giây
-    const currentTime = Math.floor(Date.now() / 1000);
-    // So sánh thời gian hết hạn với thời gian hiện tại
-    return exp < currentTime;
+    if (token && !tokenHelper.isExpired(token)) {
+      const info = {
+        access: token,
+      };
+      const profile = await this.handleAfterLogin(user, info, isAddWallet);
+      if (profile) {
+        return {
+          status: 1,
+          profile,
+        };
+      }
+    }
+
+    let infoLogin = await this.login(user);
+
+    if (infoLogin) {
+      const profile = await this.handleAfterLogin(user, infoLogin, isAddWallet);
+      if (profile) {
+        return {
+          status: 1,
+          profile,
+        };
+      }
+    }
+    user.log.logError(
+      "Quá trình đăng nhập thất bại, vui lòng kiểm tra lại thông tin tài khoản (có thể cần phải lấy mới user data/query_id). Hệ thống sẽ thử đăng nhập lại sau 60s"
+    );
+    return {
+      status: 0,
+      profile: null,
+    };
+  }
+
+  async getProfile(user) {
+    try {
+      const { data } = await user.http.post(`user/balance`, {});
+      if (data) {
+        return data.data;
+      }
+      return null;
+    } catch (error) {
+      user.log.logError(`Lấy thông tin tài khoản thất bại: ${error.message}`);
+      return null;
+    }
+  }
+
+  async handleAfterLogin(user, info, isAddWallet = false) {
+    const accessToken = info.access || null;
+    user.http.updateToken(accessToken);
+    fileHelper.saveToken(user.info.id, accessToken);
+    const profile = await this.getProfile(user);
+    if (isAddWallet) {
+      const infoWallet = await walletService.getInfo(user);
+      const msg =
+        colors.green(`Đăng nhập thành công: `) +
+        colors.white("Địa chỉ ví: ") +
+        (infoWallet.walletAddress
+          ? colors.blue(infoWallet.walletAddress)
+          : colors.yellow("Chưa liên kết"));
+      user.log.log(msg);
+    } else {
+      const rank = await rankService.getRank(user);
+      if (profile) {
+        const rankText = rank?.isCreated
+          ? `${colors.magenta(
+              `Level ${rank?.currentRank?.level} - ${rank?.currentRank?.name}`
+            )}`
+          : colors.magenta(`Chưa nhận`);
+        user.log.log(
+          colors.green("Đăng nhập thành công: ") +
+            `Rank: ${rankText} | ` +
+            `Số cà chua: ${
+              colors.yellow(formatHelper.currency(profile?.available_balance)) +
+              user.currency
+            }` +
+            ` | Số sao: ${colors.yellow(rank?.unusedStars || 0)} ⭐`
+        );
+        if (!rank?.isCreated) await rankService.creareRank(user);
+      }
+    }
+
+    return profile;
   }
 }
 

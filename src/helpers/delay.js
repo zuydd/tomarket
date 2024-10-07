@@ -1,11 +1,9 @@
-import logHelper from "./log.js";
-
 class DelayHelper {
   constructor() {}
 
-  delay(seconds, msg = null, dataUser = null, ip = null) {
+  delay(seconds, msg = null, log = null) {
     if (msg) {
-      logHelper.log(msg, dataUser, ip);
+      log.log(msg);
     }
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
   }
