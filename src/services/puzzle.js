@@ -28,13 +28,13 @@ class PuzzleService {
         user.log.logError(
           `Lấy danh sách puzzle thất bại - Lỗi: ${data?.message}`
         );
-        return null;
+        return [];
       }
     } catch (error) {
       user.log.logError(
         `Lấy danh sách puzzle thất bại - Lỗi: ${error.message}`
       );
-      return null;
+      return [];
     }
   }
 

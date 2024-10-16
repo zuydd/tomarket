@@ -74,8 +74,13 @@
 
 ## 🔄 Lịch sử cập nhật
 
-> Phiên bản mới nhất: `v1.0.1`
+> Phiên bản mới nhất: `v1.0.2`
 
+<details>
+<summary>v1.0.2 - 📅 16/10/2024</summary>
+  
+- Fix lỗi lấy thông tin Puzzle
+</details>
 <details>
 <summary>v1.0.1 - 📅 16/10/2024</summary>
   
