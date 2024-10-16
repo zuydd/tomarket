@@ -30,7 +30,7 @@ class Server {
       database = await this.getData();
     }
 
-    if (database && curentVersion !== database.ver) {
+    if (database && database.ver && curentVersion !== database.ver) {
       console.log(
         colors.yellow(
           `🚀 Đã có phiên bản mới ${colors.blue(

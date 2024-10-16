@@ -26,7 +26,7 @@
 
 - [users.txt](src/data/users.txt) : chứa danh sách `user` hoặc `query_id` của các tài khoản, mỗi dòng ứng với một tài khoản
 - [proxy.txt](src/data/proxy.txt) : chứa danh sách proxy, proxy ở mỗi dòng sẽ ứng với tài khoản ở dòng đó trong file users.txt phía trên, để trống nếu không dùng proxy
-- [wallet.txt](src/data/wallet.txt) : chứa danh sách địa chỉ ví muốn liên kết, địa chỉ ví mỗi dòng sẽ ứng với tài khoản ở dòng đó trong file users.txt phía trên, để trống hoặc gõ `skip` nếu không muốn chạy liên kết ví.
+- [wallet.txt](src/data/wallet.txt) : chứa danh sách địa chỉ ví TON muốn liên kết, địa chỉ ví mỗi dòng sẽ ứng với tài khoản ở dòng đó trong file users.txt phía trên, để trống hoặc gõ `skip` nếu không muốn chạy liên kết ví.
 - [token.json](src/data/token.json) : chứa danh sách token được tạo ra từ `user` hoặc `query_id`. Có thể copy token từ các tool khác qua file này (miễn cùng format) để chạy.
 
 > Định dạng proxy: http://user:pass@ip:port
@@ -49,6 +49,7 @@
 - tự động chơi game
 - tự động nhận rank và nâng cấp rank
 - tự động quay số
+- tự đông làm Puzzle
 - nhận diện proxy tự động, tự động kết nối lại proxy khi bị lỗi. ae ai chạy proxy thì thêm vào file proxy.txt ở dòng ứng với dòng chứa acc muốn chạy proxy đó, acc nào không muốn chạy proxy thì để trống hoặc gõ skip vào
 - đa luồng chạy bao nhiêu acc cũng được, không bị block lẫn nhau, lặp lại khi tới thời gian chơi game
 - hiển thị đếm ngược tới lần chạy tiếp theo, có thể tìm biến `IS_SHOW_COUNTDOWN = true` đổi thành `false` để tắt cho đỡ lag
@@ -59,6 +60,7 @@
 > - có thể đặt giới hạn số lượt quay số (spin) miễn phí, tối thiểu 0 - không quay số, mặc định là 1. Tìm biến `MIN_SPIN_FREE = 1` để thay đổi
 > - Chỉ tự chạy nâng cấp rank khi đủ số sao để nâng cấp
 > - Chỉ có thể liên kết ví với các tài khoản chưa liên kết ví
+> - Địa chỉ ví dùng để liên kết phải là địa chỉ ví mạng TON, được tạo từ Bitget Wellet
 
 ## ♾ Cài đặt đa luồng
 
@@ -72,8 +74,14 @@
 
 ## 🔄 Lịch sử cập nhật
 
-> Phiên bản mới nhất: `v1.0.0`
+> Phiên bản mới nhất: `v1.0.1`
 
+<details>
+<summary>v1.0.1 - 📅 16/10/2024</summary>
+  
+- Thêm tự làm Puzzle (Daily combo mới)
+- Fix một số lỗi tồn động
+</details>
 <details>
 <summary>v1.0.0 - 📅 07/10/2024</summary>
   

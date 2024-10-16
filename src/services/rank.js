@@ -35,7 +35,7 @@ class RankService {
       const rank = data?.data;
       user.log.log(
         `Nhận rank thành công, rank hiện tại: ${colors.magenta(
-          `Level ${rank.currentRank.level} - ${rank.currentRank.name}`
+          `Level ${rank?.currentRank?.level} - ${rank?.currentRank?.name}`
         )} | Số sao: ${colors.yellow(rank?.unusedStars || 0)} ⭐`
       );
       return true;
@@ -53,7 +53,7 @@ class RankService {
       if (data.status === 0) {
         user.log.log(
           `Nâng cấp rank thành công, rank hiện tại: ${colors.magenta(
-            `Level ${rank.currentRank.level} - ${rank.currentRank.name}`
+            `Level ${rank?.currentRank?.level} - ${rank?.currentRank?.name}`
           )}`
         );
         return data.data;
@@ -72,9 +72,12 @@ class RankService {
     if (!rank?.isCreated) return;
     let condition = true;
     while (condition) {
-      if (rank.unusedStars >= rank.currentRank.range - rank.currentRank.stars) {
+      if (
+        rank?.unusedStars >=
+        rank?.currentRank?.range - rank?.currentRank?.stars
+      ) {
         // có thể nâng rank
-        const dataAfterUpRank = await this.upRank(user, rank.unusedStars);
+        const dataAfterUpRank = await this.upRank(user, rank?.unusedStars);
         if (dataAfterUpRank) {
           rank = dataAfterUpRank;
         } else {

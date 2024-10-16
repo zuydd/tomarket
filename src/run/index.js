@@ -6,17 +6,16 @@ import fileHelper from "../helpers/file.js";
 import generatorHelper from "../helpers/generator.js";
 import authService from "../services/auth.js";
 import dailyService from "../services/daily.js";
-// import gameService from "../services/game.js";
-import server from "../services/server.js";
-// import taskService from "../services/task.js";
 import farmService from "../services/farm.js";
 import gameService from "../services/game.js";
+import puzzleService from "../services/puzzle.js";
 import rankService from "../services/rank.js";
+import server from "../services/server.js";
 import spinService from "../services/spin.js";
 import taskService from "../services/task.js";
 import userService from "../services/user.js";
 
-const VERSION = "v1.0.0";
+const VERSION = "v1.0.1";
 // Điều chỉnh khoảng cách thời gian chạy vòng lặp đầu tiên giữa các luồng tránh bị spam request (tính bằng giây)
 const DELAY_ACC = 10;
 // Đặt số lần thử kết nối lại tối đa khi proxy lỗi, nếu thử lại quá số lần cài đặt sẽ dừng chạy tài khoản đó và ghi lỗi vào file log
@@ -109,6 +108,7 @@ const run = async (user, index) => {
     await farmService.handleFarm(user);
     await rankService.handleRank(user);
     await taskService.handleTask(user);
+    await puzzleService.handlePuzzle(user);
     await spinService.handleSpin(user, countLoop, MAX_SPIN_STAR, MIN_SPIN_FREE);
     await gameService.handleGame(user, login.profile?.play_passes);
     countLoop++;
