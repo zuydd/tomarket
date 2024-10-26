@@ -40,8 +40,10 @@ class PuzzleService {
 
   async claimPuzzle(user, task) {
     const body = user.database.puzzle;
+
     try {
       const { data } = await user.http.post("tasks/puzzleClaim", body);
+
       if (data?.status === 0) {
         user.log.log(
           `Hoàn thành ${colors.blue("Puzzle")} ${colors.gray(

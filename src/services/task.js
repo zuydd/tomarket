@@ -24,6 +24,7 @@ class TaskService {
       const dataResponse = data.data;
       const allKeysTask = Object.keys(dataResponse);
       let arrTasks = [];
+
       allKeysTask.forEach((key) => {
         if (key === "3rd") {
           if (dataResponse[key].default)
@@ -37,7 +38,8 @@ class TaskService {
           task.status !== 3 &&
           this.filterTaskCombo(task) &&
           !skipTasks.includes(task.taskId) &&
-          !skipTypes.includes(task.type)
+          !skipTypes.includes(task.type) &&
+          task.taskId < 4001
         );
       });
 
@@ -54,6 +56,10 @@ class TaskService {
     const body = { task_id: task.taskId };
     try {
       const { data } = await user.http.post("tasks/start", body);
+      // let delta = 0;
+      // if (task?.platform === "youtube" && task.tag === "expire") {
+      //   delta = 120;
+      // }
       user.log.log(
         `Bắt đầu làm nhiệm vụ ${task.taskId}: ${colors.blue(
           task.title
@@ -69,7 +75,7 @@ class TaskService {
   }
 
   async checkTask(user, task) {
-    const body = { task_id: task.taskId };
+    const body = { task_id: task.taskId, init_data: user.query_id };
     try {
       const { data } = await user.http.post("tasks/check", body);
 
@@ -81,7 +87,7 @@ class TaskService {
   }
 
   async claimTask(user, task) {
-    const body = { task_id: task.taskId };
+    const body = { task_id: task.taskId, init_data: user.query_id };
     try {
       const { data } = await user.http.post("tasks/claim", body);
       if (data.status === 0) {
@@ -110,6 +116,10 @@ class TaskService {
     }
     if (status === 1) {
       let msg = null;
+      // let delta = 0;
+      // if (task?.platform === "youtube" && task.tag === "expire") {
+      //   delta = 120;
+      // }
       if (startStatus === 1) {
         msg = `Chờ hoàn thành nhiệm vụ ${task.taskId}: ${colors.blue(
           task.title
@@ -118,13 +128,18 @@ class TaskService {
         )}`;
         user.log.log(msg);
       }
+
       await delayHelper.delay(task.waitSecond + 10);
       status = 2;
     }
     if (status === 2) {
       const statusCheck = await this.checkTask(user, task);
 
-      if (statusCheck === 2 || task.type === "mysterious") {
+      if (
+        statusCheck === 2 ||
+        task.type === "mysterious" ||
+        task.type === "emoji"
+      ) {
         await this.claimTask(user, task);
       }
     }

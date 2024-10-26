@@ -74,8 +74,16 @@
 
 ## 🔄 Lịch sử cập nhật
 
-> Phiên bản mới nhất: `v1.0.2`
+> Phiên bản mới nhất: `v1.0.3`
 
+<details>
+<summary>v1.0.3 - 📅 26/10/2024</summary>
+  
+- Fix lỗi không đăng nhập được khi tên có emoji
+- Fix lỗi làm Puzzle không thành công
+- Bỏ qua các task không làm được
+- Thêm claim task đặt tên emoji 🍅
+</details>
 <details>
 <summary>v1.0.2 - 📅 16/10/2024</summary>
   

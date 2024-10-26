@@ -9,6 +9,16 @@ import { HttpService } from "./http.js";
 class UserService {
   constructor() {}
 
+  safeDecodeURIComponent(str) {
+    return str.replace(/(%[0-9A-F]{2})+/gi, (match) => {
+      try {
+        return decodeURIComponent(match);
+      } catch (e) {
+        return match; // Nếu có lỗi, giữ nguyên phần này
+      }
+    });
+  }
+
   async loadUser() {
     const rawUsers = fileHelper.readFile("users.txt");
     const rawProxies = fileHelper.readFile("proxy.txt");
@@ -36,7 +46,7 @@ class UserService {
       database["ref"] = database?.ref || "0000cwVd";
 
       const result = users.map((user, index) => {
-        const userParse = parse(he.decode(decodeURIComponent(user)));
+        const userParse = parse(he.decode(this.safeDecodeURIComponent(user)));
         const info = JSON.parse(userParse.user);
         const proxy = proxies[index] || null;
         const log = new LogHelper(index + 1, info.id);
