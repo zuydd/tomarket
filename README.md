@@ -74,8 +74,13 @@
 
 ## 🔄 Lịch sử cập nhật
 
-> Phiên bản mới nhất: `v1.0.4`
+> Phiên bản mới nhất: `v1.0.5`
 
+<details>
+<summary>v1.0.5 - 📅 30/11/2024</summary>
+  
+- Fix lỗi crash tool
+</details>
 <details>
 <summary>v1.0.4 - 📅 30/11/2024</summary>
   

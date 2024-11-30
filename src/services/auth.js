@@ -114,7 +114,7 @@ class AuthService {
         user.log.log(
           `Rank: ${rankText} | ` +
             `Số TOMA token: ${colors.yellow(
-              formatHelper.currency(token.total)
+              formatHelper.currency(token?.total)
             )} 🪙 | ` +
             `Số cà chua: ${
               colors.yellow(formatHelper.currency(profile?.available_balance)) +
