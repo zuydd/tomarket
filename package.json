@@ -1,6 +1,6 @@
 {
   "name": "auto_tomarket",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Tool tự động làm airdrop Tomarket",
   "type": "module",
   "main": "src/run/index.js",

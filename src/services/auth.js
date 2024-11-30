@@ -3,6 +3,7 @@ import fileHelper from "../helpers/file.js";
 import formatHelper from "../helpers/format.js";
 import tokenHelper from "../helpers/token.js";
 import rankService from "./rank.js";
+import tokenService from "./token.js";
 import walletService from "./wallet.js";
 
 class AuthService {
@@ -102,20 +103,24 @@ class AuthService {
       user.log.log(msg);
     } else {
       const rank = await rankService.getRank(user);
+      const token = await tokenService.getBalanceToken(user);
       if (profile) {
         const rankText = rank?.isCreated
           ? `${colors.magenta(
               `Level ${rank?.currentRank?.level} - ${rank?.currentRank?.name}`
             )}`
           : colors.magenta(`Chưa nhận`);
+        user.log.log(colors.green("Đăng nhập thành công:"));
         user.log.log(
-          colors.green("Đăng nhập thành công: ") +
-            `Rank: ${rankText} | ` +
+          `Rank: ${rankText} | ` +
+            `Số TOMA token: ${colors.yellow(
+              formatHelper.currency(token.total)
+            )} 🪙 | ` +
             `Số cà chua: ${
               colors.yellow(formatHelper.currency(profile?.available_balance)) +
               user.currency
             }` +
-            ` | Số sao: ${colors.yellow(rank?.unusedStars || 0)} ⭐`
+            ` | Số sao: ${colors.yellow(rank?.currentWeekStars || 0)} ⭐`
         );
         if (!rank?.isCreated) await rankService.creareRank(user);
       }

@@ -6,6 +6,7 @@ class RankService {
   async getRank(user) {
     try {
       const { data } = await user.http.post("rank/data", {});
+
       return data.data;
     } catch (error) {
       user.log.logError(`Lấy thông tin rank thất bại - Lỗi: ${error.message}`);
@@ -36,7 +37,7 @@ class RankService {
       user.log.log(
         `Nhận rank thành công, rank hiện tại: ${colors.magenta(
           `Level ${rank?.currentRank?.level} - ${rank?.currentRank?.name}`
-        )} | Số sao: ${colors.yellow(rank?.unusedStars || 0)} ⭐`
+        )} | Số sao: ${colors.yellow(rank?.currentWeekStars || 0)} ⭐`
       );
       return true;
     } catch (error) {

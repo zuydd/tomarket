@@ -13,9 +13,10 @@ import rankService from "../services/rank.js";
 import server from "../services/server.js";
 import spinService from "../services/spin.js";
 import taskService from "../services/task.js";
+import tokenService from "../services/token.js";
 import userService from "../services/user.js";
 
-const VERSION = "v1.0.3";
+const VERSION = "v1.0.4";
 // Điều chỉnh khoảng cách thời gian chạy vòng lặp đầu tiên giữa các luồng tránh bị spam request (tính bằng giây)
 const DELAY_ACC = 10;
 // Đặt số lần thử kết nối lại tối đa khi proxy lỗi, nếu thử lại quá số lần cài đặt sẽ dừng chạy tài khoản đó và ghi lỗi vào file log
@@ -105,12 +106,14 @@ const run = async (user, index) => {
     }
 
     await dailyService.handleDaily(user, countLoop);
+    // await delayHelper.delay(100000);
     await farmService.handleFarm(user);
     await rankService.handleRank(user);
     await taskService.handleTask(user);
     await puzzleService.handlePuzzle(user);
     await spinService.handleSpin(user, countLoop, MAX_SPIN_STAR, MIN_SPIN_FREE);
     await gameService.handleGame(user, login.profile?.play_passes);
+    await tokenService.handleToken(user);
     countLoop++;
     const awaitTime = generatorHelper.randomInt(15, 20);
     user.log.log(

@@ -74,8 +74,17 @@
 
 ## 🔄 Lịch sử cập nhật
 
-> Phiên bản mới nhất: `v1.0.3`
+> Phiên bản mới nhất: `v1.0.4`
 
+<details>
+<summary>v1.0.4 - 📅 30/11/2024</summary>
+  
+- Thêm nhặt sao khi chơi game
+- Tự động chuyển đổi cà chua thành sao
+- Tự động claim TOMA hàng tuần
+- Thêm làm các task bonus
+- Fix một số lỗi lặt vặt
+</details>
 <details>
 <summary>v1.0.3 - 📅 26/10/2024</summary>
   

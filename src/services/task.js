@@ -39,7 +39,7 @@ class TaskService {
           this.filterTaskCombo(task) &&
           !skipTasks.includes(task.taskId) &&
           !skipTypes.includes(task.type) &&
-          task.taskId < 4001
+          (task.taskId < 4001 || task.taskId > 10000)
         );
       });
 

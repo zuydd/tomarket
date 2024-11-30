@@ -18,26 +18,46 @@ class GameService {
         game_id: this.gameId.drop,
       };
       const { data } = await user.http.post("game/play", body);
+
       user.log.log(
         `Bắt đầu chơi game, kết thúc và nhận thưởng sau: ${colors.blue("30s")}`
       );
-      return true;
+
+      const stars =
+        Math.floor(data?.data?.stars * parseFloat(data?.data?.boost) * 100) /
+        100;
+      return {
+        status: true,
+        data: {
+          stars,
+        },
+      };
     } catch (error) {
       user.log.logError(`Không thể chơi game - Lỗi: ${error.message}`);
-      return false;
+      return {
+        status: false,
+        data: null,
+      };
     }
   }
 
-  async claimGame(user) {
+  async claimGame(user, stars) {
     try {
       const points = generatorHelper.randomInt(370, 450);
       const body = {
         game_id: this.gameId.drop,
         points,
+        stars,
       };
       const { data } = await user.http.post("game/claim", body);
+      let starsText = "";
+      if (stars) {
+        starsText = ` - ${colors.yellow(stars)} ⭐`;
+      }
       user.log.log(
-        `Chơi game xong, phần thưởng: ${colors.yellow(points + user.currency)}`
+        `Chơi game xong, phần thưởng: ${
+          colors.yellow(points + user.currency) + starsText
+        }`
       );
     } catch (error) {
       user.log.logError(`Chơi game thất bại - Lỗi: ${error.message}`);
@@ -51,10 +71,10 @@ class GameService {
 
     while (playPasses > 0) {
       playPasses--;
-      const statusPlay = await this.playGame(user);
-      if (!statusPlay) return;
+      const dataPlay = await this.playGame(user);
+      if (!dataPlay.status) return;
       await delayHelper.delay(30);
-      await this.claimGame(user);
+      await this.claimGame(user, dataPlay.data.stars);
     }
   }
 }
